@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ИТ Калининград — Мониторинг отрасли 2025</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="particles"></canvas>
+
+  <header class="hero-header">
+    <div class="container">
+      <h1>Мониторинг ИТ-отрасли<br>Калининградской области</h1>
+      <p class="subtitle">
+        Актуальные данные по компаниям, выручке и аккредитации<br>
+        <span class="date">по состоянию на ноябрь 2025</span>
+      </p>
+
+      <div class="stats-grid" id="liveStats">
+        <div class="stat">
+          <div class="stat-number" id="totalCompanies">0</div>
+          <div class="stat-label">ИТ-компаний</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="accCompanies">0</div>
+          <div class="stat-label">Аккредитованы<br>Минцифры</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="totalRevenue">0</div>
+          <div class="stat-label">млрд ₽<br>общая выручка 2024</div>
+        </div>
+        <div class="stat">
+          <div class="stat-number" id="totalEmployees">0</div>
+          <div class="stat-label">человек<br>в отрасли</div>
+        </div>
+      </div>
+      
+      <a href="dashboard.html" class="btn-primary">
+        Перейти к аналитике →
+      </a>
+    </div>
+  </header>
+    
+  <!-- Сначала наш лёгкий particles.js, потом данные, потом логика -->
+  <script src="particles.js"></script>
+  <script src="data.js"></script>
+  <script>
+    // Парсер выручки
+    function parseRevenue(str) {
+      if (!str || str.includes('Нет') || str.includes('—')) return 0;
+      const num = parseFloat(str.replace(/[^\d.]/g, ''));
+      if (isNaN(num)) return 0;
+      return str.includes('млрд') ? num * 1000 : num;
+    }
+
+    // Считаем всё
+    const totalCompanies = companies.length;
+    const accCompanies = companies.filter(c => c.accredited).length;
+    const totalRevenueBn = (companies.reduce((sum, c) => sum + parseRevenue(c.revenue), 0) / 1000).toFixed(1);
+    const totalEmployees = companies.reduce((sum, c) => sum + (Number(c.employees) || 0), 0);
+
+    // Вставляем в DOM
+    document.getElementById('totalCompanies').textContent = totalCompanies;
+    document.getElementById('accCompanies').textContent = accCompanies;
+    document.getElementById('totalRevenue').textContent = totalRevenueBn;
+    document.getElementById('totalEmployees').textContent = totalEmployees;
+
+    // Красивая анимация счётчиков
+    document.querySelectorAll('.stat-number').forEach(el => {
+      const target = +el.textContent;
+      let current = 0;
+      const increment = target / 70;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= target) {
+          el.textContent = target % 1 === 0 ? target : target.toFixed(1);
+          clearInterval(timer);
+        } else {
+          el.textContent = current < 10 ? current.toFixed(1) : Math.floor(current);
+        }
+      }, 30);
+    });
+  </script>
+</body>
+</html>

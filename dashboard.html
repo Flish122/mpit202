@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Аналитика ИТ-Калининград</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <style>
+    /* Кликабельные карточки + стрелочка */
+    .company-card {
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .company-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2) !important;
+    }
+    .open-arrow {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-size: 28px;
+      color: #667eea;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    .company-card:hover .open-arrow {
+      opacity: 1;
+      transform: translateX(6px);
+    }
+  .company-link.clickable {
+    cursor: pointer !important;
+    transition: all 0.3s ease;
+  }
+  .company-link.clickable:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25) !important;
+  }
+  .open-arrow {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 28px;
+    color: #00d4ff;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+  .company-link.clickable:hover .open-arrow {
+    opacity: 1;
+    transform: translateX(6px);
+  }
+  </style>
+</head>
+<body>
+
+  <canvas id="particles"></canvas>
+
+  <!-- НАВБАР -->
+  <nav>
+    <div class="nav-left">
+      <div class="logo">ИТ Калининград</div>
+      <a href="index.html" class="back-to-home">На главную</a>
+    </div>
+
+    <div class="header-search-desktop">
+      <input type="text" id="searchInput" placeholder="Поиск по названию, ИНН или городу..." autocomplete="off">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L21.29 20l-5-5zM9.5 14A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+    </div>
+
+    <div class="menu-toggle" id="menuToggle">
+      <span></span><span></span><span></span>
+    </div>
+  </nav>
+
+  <!-- Мобильный поиск -->
+  <div class="header-search-mobile">
+    <input type="text" id="searchInputMobile" placeholder="Поиск компаний..." autocomplete="off">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L21.29 20l-5-5zM9.5 14A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+  </div>
+
+  <!-- Фильтры по аккредитации -->
+  <div class="main-filters">
+    <button class="main-filter-btn active" data-filter="all">
+      Все компании <span class="count" id="countAll">0</span>
+    </button>
+    <button class="main-filter-btn" data-filter="acc">
+      Аккредитованные <span class="count" id="countAcc">0</span>
+    </button>
+    <button class="main-filter-btn" data-filter="no">
+      Неаккредитованные <span class="count" id="countNo">0</span>
+    </button>
+  </div>
+
+  <!-- Список компаний -->
+  <div class="grid" id="results"></div>
+
+  <!-- Сайдбар аналитики -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h3>Меню</h3>
+      <button class="close-sidebar">×</button>
+    </div>
+    <div class="sidebar-section">
+      <h4 class="sidebar-title">Аналитика</h4>
+      <a href="analytics/top-revenue.html" class="sidebar-link">ТОП-10 по выручке</a>
+      <a href="analytics/cities.html" class="sidebar-link">По городам</a>
+      <a href="analytics/accreditation.html" class="sidebar-link">Аккредитация</a>
+      <a href="analytics/bubble.html" class="sidebar-link">Выручка ↔ Сотрудники</a>
+      <a href="analytics/revenue-share.html" class="sidebar-link">Доля выручки</a>
+      <a href="analytics/efficiency.html" class="sidebar-link">Эффективность (млн ₽/чел)</a>
+    </div>
+  </aside>
+
+  <!-- Скрипты -->
+  <script src="particles.js"></script>
+  <script src="data.js"></script>
+  <script src="dashboard.js"></script>
+
+  <!-- ГЛАВНЫЙ РАБОЧИЙ СКРИПТ (всё внутри dashboard.js, но дублирую тут для 100% совместимости) -->
+<script>
+  const companyPages = {
+    "3906397181": "voxis-lab.html",
+    "3906370038": "softex.html",
+    "3906402988": "icel-zapad.html",
+    "3908037561": "robot-ix.html",
+    "3906900937": "neolant-tenax.html",
+    "3906900574": "kode.html",
+    "3906117613": "felena-soft.html",
+    "3906954940": "konig-labs.html",
+    "3906370567": "tortu.html",
+    "7713721953": "bft-proekt.html"
+  };
+
+  const results = document.getElementById('results');
+  const companies = window.data || [];
+
+  function render(list) {
+    if (!list || list.length === 0) {
+      results.innerHTML = '<p style="text-align:center;color:#aaa;padding:120px 20px;font-size:20px;">Ничего не найдено</p>';
+      return;
+    }
+
+    results.innerHTML = list.map(c => {
+      const hasPage = companyPages[c.inn];
+
+      return `
+        <div class="card company-link ${hasPage ? 'clickable' : ''}" 
+             ${hasPage ? `data-page="${companyPages[c.inn]}"` : ''}
+             style="position:relative; overflow:hidden; ${hasPage ? 'cursor:pointer;' : ''}">
+          
+          <div class="card-header">
+            <h3>${c.name}</h3>
+            ${hasPage ? '<span class="open-arrow">→</span>' : ''}
+          </div>
+          
+          <p class="company-inn">ИНН: ${c.inn}</p>
+          <p class="company-city">${c.city}</p>
+          
+          <div class="card-footer">
+            <span class="revenue">Выручка 2024: <strong>${c.revenue}</strong></span>
+            <span class="employees">${c.employees} чел.</span>
+          </div>
+          
+          ${c.accredited 
+            ? '<span class="badge accredited">Аккредитована</span>' 
+            : '<span class="badge not-accredited">Не аккредитована</span>'
+          }
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Переход по клику в ЛЮБОМ месте карточки
+  results.addEventListener('click', e => {
+    const card = e.target.closest('.clickable');
+    if (card && card.dataset.page) {
+      window.location.href = card.dataset.page;
+    }
+  });
+
+  // Фильтры
+  document.querySelectorAll('.main-filter-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.main-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      let filtered = filter === 'acc' ? companies.filter(c => c.accredited) :
+                    filter === 'no'  ? companies.filter(c => !c.accredited) : companies;
+      render(filtered);
+    };
+  });
+
+  // Поиск
+  ['searchInput', 'searchInputMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => {
+      const term = el.value.toLowerCase();
+      const filtered = companies.filter(c =>
+        c.name.toLowerCase().includes(term) ||
+        c.inn.includes(term) ||
+        c.city.toLowerCase().includes(term)
+      );
+      render(filtered);
+    });
+  });
+
+  // Запуск
+  document.addEventListener('DOMContentLoaded', () => {
+    render(companies);
+    const total = companies.length;
+    const acc = companies.filter(c => c.accredited).length;
+    document.getElementById('countAll').textContent = total;
+    document.getElementById('countAcc').textContent = acc;
+    document.getElementById('countNo').textContent = total - acc;
+  });
+</script>
+</body>
+</html>

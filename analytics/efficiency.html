@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><title>Эффективность — ИТ Калининград</title>
+  <link rel="stylesheet" href="../styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="../pdf-font.js"></script>
+  <style>.controls{position:fixed;top:90px;left:20px;right:20px;display:flex;gap:15px;z-index:1000;flex-wrap:wrap;justify-content:center}
+    .controls a,.controls button{background:rgba(102,252,241,.15);border:1px solid #66fcf1;color:#66fcf1;padding:12px 24px;border-radius:16px;font-weight:600;cursor:pointer;transition:.3s;backdrop-filter:blur(10px)}
+    .controls a:hover,.controls button:hover{background:#66fcf1;color:#071026;transform:translateY(-3px)}
+    .chart-container{padding:160px 20px 100px;max-width:1200px;margin:auto}
+    .chart-card{background:var(--glass);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px;backdrop-filter:blur(16px)}
+    h1{font-size:42px;text-align:center;background:linear-gradient(90deg,#66fcf1,#45a29e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px}
+  </style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<nav><div class="logo">ИТ Калининград</div><a href="../dashboard.html" class="btn btn-ghost">Назад</a></nav>
+<div class="controls"><a href="../dashboard.html">Назад</a><button id="pdfBtn">PDF</button><button id="csvBtn">CSV</button></div>
+<div class="chart-container"><h1>Эффективность компаний (ТОП-15)</h1><div class="chart-card"><canvas id="chart" height="600"></canvas></div></div>
+<script src="../particles.js"></script><script src="../data.js"></script>
+<script>
+function p(s){const n=parseFloat(s.replace(/[^\d.]/g,''));return s.includes('млрд')?n*1000:n;}
+const eff=[...companies].sort((a,b)=>(p(b.revenue)/b.employees)-(p(a.revenue)/a.employees)).slice(0,15).map(c=>({name:c.name.length>22?c.name.slice(0,19)+'...':c.name,val:p(c.revenue)/c.employees}));
+const chart=new Chart(document.getElementById('chart'),{type:'bar',data:{labels:eff.map(e=>e.name),datasets:[{label:'млн ₽ на сотрудника',data:eff.map(e=>e.val.toFixed(1)),backgroundColor:'#45a29e'}]},options:{indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:'rgba(255,255,255,0.05)'}}}}});
+
+document.getElementById('csvBtn').onclick=()=>{
+  let csv="Ранг;Компания;Выручка на сотрудника, млн ₽\n";
+  eff.forEach((e,i)=>csv+=`${i+1};"${e.name}";${e.val.toFixed(2)}\n`);
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});saveAs(blob,'Эффективность_ТОП15.csv');
+};
+document.getElementById('pdfBtn').addEventListener('click', async () => {
+  while (!window.pdfCyrillicReady) await new Promise(r => setTimeout(r, 50));
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('l', 'mm', 'a4');
+  pdf.setFont('Roboto');
+  pdf.setFontSize(22);
+
+  const title = document.querySelector('h1').textContent + ' — ИТ Калининград';
+  pdf.text(title, 148, 25, { align: 'center' });
+
+  pdf.addImage(chart.toBase64Image(), 'PNG', 15, 40, 270, 140);
+  pdf.save(title.replace(/[^\w\s-]/g, '') + '.pdf');
+});
+</script>
+</body>
+</html>

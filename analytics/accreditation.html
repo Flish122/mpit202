@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><title>Статус аккредитации — ИТ Калининград</title>
+  <link rel="stylesheet" href="../styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="../pdf-font.js"></script>
+  <style>.controls{position:fixed;top:90px;left:20px;right:20px;display:flex;gap:15px;z-index:1000;flex-wrap:wrap;justify-content:center}
+    .controls a,.controls button{background:rgba(102,252,241,.15);border:1px solid #66fcf1;color:#66fcf1;padding:12px 24px;border-radius:16px;font-weight:600;cursor:pointer;transition:.3s;backdrop-filter:blur(10px)}
+    .controls a:hover,.controls button:hover{background:#66fcf1;color:#071026;transform:translateY(-3px)}
+    .chart-container{padding:160px 20px 100px;max-width:1200px;margin:auto}
+    .chart-card{background:var(--glass);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:40px;backdrop-filter:blur(16px)}
+    h1{font-size:42px;text-align:center;background:linear-gradient(90deg,#66fcf1,#45a29e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px}
+  </style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<nav><div class="logo">ИТ Калининград</div><a href="../dashboard.html" class="btn btn-ghost">Назад</a></nav>
+<div class="controls"><a href="../dashboard.html">Назад</a><button id="pdfBtn">PDF</button><button id="csvBtn">CSV</button></div>
+<div class="chart-container"><h1>Статус аккредитации</h1><div class="chart-card"><canvas id="chart" height="500"></canvas></div></div>
+<script src="../particles.js"></script><script src="../data.js"></script>
+<script>
+const acc=companies.filter(c=>c.accredited).length;
+const no=companies.length-acc;
+const chart=new Chart(document.getElementById('chart'),{type:'pie',data:{labels:['Аккредитованные','Неаккредитованные'],datasets:[{data:[acc,no],backgroundColor:['#66fcf1','#444']}]},options:{plugins:{legend:{position:'right'}}}});
+
+
+document.getElementById('csvBtn').onclick=()=>{
+  const csv=`Статус;Количество\nАккредитованные;${acc}\nНеаккредитованные;${no}\n`;
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});saveAs(blob,'Аккредитация.csv');
+};
+document.getElementById('pdfBtn').addEventListener('click', async () => {
+  while (!window.pdfCyrillicReady) await new Promise(r => setTimeout(r, 50));
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('l', 'mm', 'a4');
+  pdf.setFont('Roboto');
+  pdf.setFontSize(22);
+
+  const title = document.querySelector('h1').textContent + ' — ИТ Калининград';
+  pdf.text(title, 148, 25, { align: 'center' });
+
+  pdf.addImage(chart.toBase64Image(), 'PNG', 15, 40, 270, 140);
+  pdf.save(title.replace(/[^\w\s-]/g, '') + '.pdf');
+});
+</script>
+</body>
+</html>
